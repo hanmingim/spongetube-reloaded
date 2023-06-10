@@ -3,7 +3,7 @@ extends base
 block content
     div#videoContainer(data-id=video._id)
         video
-          source(src=`/{$video.videoUpload}`,type="video/mp4" )
+          source(src=`/${video.videoUpload}`)
         div#videoControls.videoControls
             div.videoControls__play
                 span#play.videoControls__playBtn
