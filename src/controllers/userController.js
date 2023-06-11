@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User';
+const fetch = require("node-fetch").default;
 
 export const getJoin = (req, res) => res.render('join', { pageTitle: 'Join' });
 
@@ -46,7 +47,7 @@ export const postLogin = async (req, res) => {
   if (!user) {
     return res.status(400).render('login', {
       pageTitle,
-      errorMessage: 'An account with username does not exists.',
+      errorMessage: 'An account with this username does not exist.',
     });
   }
   const ok = await bcrypt.compare(password, user.password);
@@ -108,7 +109,7 @@ export const finishGithubLogin = async (req, res) => {
       })
     ).json();
     const emailObj = emailData.find(
-      (email) => email.primary === true && email.verified === true,
+      (email) => email.primary === true && email.verified === true
     );
     if (!emailObj) {
       // set notification
