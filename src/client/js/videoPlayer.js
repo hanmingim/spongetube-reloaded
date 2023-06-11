@@ -18,101 +18,101 @@ let volumeValue = 0.5;
 video.volume = volumeValue;
 
 const handlePlayClick = () => {
-    if (video.paused) {
-        video.play();
-    } else {
-        video.pause();
-    }
-    playBtnIcon.classList = video.paused ? "fas fa-play" : "fas fa-pause";
+  if (video.paused) {
+    video.play();
+  } else {
+    video.pause();
+  }
+  playBtnIcon.classList = video.paused ? "fas fa-play" : "fas fa-pause";
 };
 
 const handleMuteClick = () => {
-    if (video.muted) {
-        video.muted = false;
-    } else {
-        video.muted = true;
-    }
-    muteBtnIcon.classList = video.muted
-        ? "fas fa-volume-mute"
-        : "fas fa-volume-up";
-    volumeRange.value = video.muted ? 0 : volumeValue;
+  if (video.muted) {
+    video.muted = false;
+  } else {
+    video.muted = true;
+  }
+  muteBtnIcon.classList = video.muted
+    ? "fas fa-volume-mute"
+    : "fas fa-volume-up";
+  volumeRange.value = video.muted ? 0 : volumeValue;
 };
 
 const handleVolumeChange = (event) => {
-    const { value } = event.target;
-    video.volume = value;
-    volumeValue = value;
+  const { value } = event.target;
+  video.volume = value;
+  volumeValue = value;
 };
 
 const formatTime = (seconds) =>
-    new Date(seconds * 1000).toISOString().substr(14, 5);
+  new Date(seconds * 1000).toISOString().substr(14, 5);
 
 const handleLoadedMetadata = () => {
-    totalTime.innerText = formatTime(Math.floor(video.duration));
-    timeline.max = Math.floor(video.duration);
+  totalTime.innerText = formatTime(Math.floor(video.duration));
+  timeline.max = Math.floor(video.duration);
 };
 
 const handleTimeUpdate = () => {
-    currentTime.innerText = formatTime(Math.floor(video.currentTime));
-    timeline.value = Math.floor(video.currentTime);
+  currentTime.innerText = formatTime(Math.floor(video.currentTime));
+  timeline.value = Math.floor(video.currentTime);
 };
 
 const handleTimelineChange = (event) => {
-    const { value } = event.target;
-    video.currentTime = value;
+  const { value } = event.target;
+  video.currentTime = value;
 };
 
 const handleFullscreen = () => {
-    if (videoContainer.requestFullscreen) {
-        videoContainer.requestFullscreen();
-    } else if (videoContainer.mozRequestFullScreen) {
-        videoContainer.mozRequestFullScreen();
-    } else if (videoContainer.webkitRequestFullscreen) {
-        videoContainer.webkitRequestFullscreen();
-    } else if (videoContainer.msRequestFullscreen) {
-        videoContainer.msRequestFullscreen();
-    }
+  if (videoContainer.requestFullscreen) {
+    videoContainer.requestFullscreen();
+  } else if (videoContainer.mozRequestFullScreen) {
+    videoContainer.mozRequestFullScreen();
+  } else if (videoContainer.webkitRequestFullscreen) {
+    videoContainer.webkitRequestFullscreen();
+  } else if (videoContainer.msRequestFullscreen) {
+    videoContainer.msRequestFullscreen();
+  }
 };
 
 const hideControls = () => {
-    videoControls.classList.remove("showing");
+  videoControls.classList.remove("showing");
 };
 
 const handleMouseMove = () => {
-    if (controlsTimeout) {
-        clearTimeout(controlsTimeout);
-        controlsTimeout = null;
-    }
-    if (controlsMovementTimeout) {
-        clearTimeout(controlsMovementTimeout);
-        controlsMovementTimeout = null;
-    }
-    videoControls.classList.add("showing");
-    controlsMovementTimeout = setTimeout(hideControls, 3000);
+  if (controlsTimeout) {
+    clearTimeout(controlsTimeout);
+    controlsTimeout = null;
+  }
+  if (controlsMovementTimeout) {
+    clearTimeout(controlsMovementTimeout);
+    controlsMovementTimeout = null;
+  }
+  videoControls.classList.add("showing");
+  controlsMovementTimeout = setTimeout(hideControls, 3000);
 };
 
 const handleMouseLeave = () => {
-    controlsTimeout = setTimeout(hideControls, 3000);
+  controlsTimeout = setTimeout(hideControls, 3000);
 };
 
 const handleEnded = () => {
-    const { id } = videoContainer.dataset;
-    fetch(`/api/videos/${id}/view`, {
-        method: "POST",
+  const { id } = videoContainer.dataset;
+  fetch(`/api/videos/${id}/view`, {
+    method: "POST",
+  })
+    .then((response) => {
+      if (response.ok) {
+        console.log("비디오 종료 후 동작 실행");
+        const viewsElement = document.getElementById("views");
+        if (viewsElement) {
+          const currentViews = parseInt(viewsElement.innerText);
+          viewsElement.innerText = currentViews + 1;
+        }
+      }
     })
-        .then((response) => {
-            if (response.ok) {
-                console.log("비디오 종료 후 동작 실행");
-                const viewsElement = document.getElementById("views");
-                if (viewsElement) {
-                    const currentViews = parseInt(viewsElement.innerText);
-                    viewsElement.innerText = currentViews + 1;
-                }
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        });
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 playBtn.addEventListener("click", handlePlayClick);
