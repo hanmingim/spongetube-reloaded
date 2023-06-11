@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/hanmingim/spongetube-reloaded#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.350.0",
     "@ffmpeg/core": "^0.11.0",
     "@ffmpeg/ffmpeg": "^0.11.6",
     "aws-sdk": "^2.1395.0",
