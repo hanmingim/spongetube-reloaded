@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User';
-const fetch = require("node-fetch").default;
+import fetch from 'node-fetch';
 
 export const getJoin = (req, res) => res.render('join', { pageTitle: 'Join' });
 
@@ -112,7 +112,6 @@ export const finishGithubLogin = async (req, res) => {
       (email) => email.primary === true && email.verified === true
     );
     if (!emailObj) {
-      // set notification
       return res.redirect('/login');
     }
     let user = await User.findOne({ email: emailObj.email });
@@ -129,17 +128,17 @@ export const finishGithubLogin = async (req, res) => {
     }
     req.session.loggedIn = true;
     req.session.user = user;
-    await req.session.save(); // issue #4724
     return res.redirect('/');
+  } else {
+    return res.redirect('/login');
   }
-  return res.redirect('/login');
 };
 
 export const logout = (req, res) => {
   req.flash('info', 'Bye Bye');
   req.session.destroy((err) => {
     if (err) {
-      // handle error
+      console.log(err);
     }
     return res.redirect('/');
   });
@@ -149,7 +148,6 @@ export const getEdit = (req, res) =>
   res.render('edit-profile', { pageTitle: 'Edit Profile' });
 
 export const postEdit = async (req, res) => {
-  const pageTitle = 'Edit Profile';
   const {
     session: {
       user: { _id, avatarUrl },
@@ -162,14 +160,14 @@ export const postEdit = async (req, res) => {
 
   if (currentUser.email !== email && (await User.exists({ email }))) {
     return res.status(400).render('edit-profile', {
-      pageTitle,
+      pageTitle: 'Edit Profile',
       errorMessage: 'This email is already taken.',
     });
   }
 
   if (currentUser.username !== username && (await User.exists({ username }))) {
     return res.status(400).render('edit-profile', {
-      pageTitle,
+      pageTitle: 'Edit Profile',
       errorMessage: 'This username is already taken.',
     });
   }
@@ -183,7 +181,7 @@ export const postEdit = async (req, res) => {
       username,
       location,
     },
-    { new: true },
+    { new: true }
   );
 
   req.session.user = updateUser;
@@ -207,7 +205,6 @@ export const postChangePassword = async (req, res) => {
   } = req;
   const user = await User.findById(_id);
 
-  // Output an error message if `oldPassword` is incorrect.
   const ok = await bcrypt.compare(oldPassword, user.password);
   if (!ok) {
     return res.status(400).render('users/change-password', {
@@ -216,8 +213,6 @@ export const postChangePassword = async (req, res) => {
     });
   }
 
-  // Output an error message if `newPassword` and `newPasswordConfirmation` are
-  // different.
   if (newPassword !== newPasswordConfirmation) {
     return res.status(400).render('users/change-password', {
       pageTitle: 'Change Password',
@@ -225,7 +220,6 @@ export const postChangePassword = async (req, res) => {
     });
   }
 
-  // Update the user's password.
   user.password = newPassword;
   await user.save();
   req.flash('info', 'Password updated');
@@ -233,7 +227,6 @@ export const postChangePassword = async (req, res) => {
 };
 
 export const see = async (req, res) => {
-  // To make it public, we get the id from `req.params`.
   const { id } = req.params;
 
   const user = await User.findById(id).populate({
