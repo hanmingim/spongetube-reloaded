@@ -1,32 +1,24 @@
-import User from "../models/User";
-import fetch from "node-fetch";
-import bcrypt from "bcrypt";
+import bcrypt from 'bcrypt';
+import User from '../models/User';
 
-export const getJoin = (req, res) => res.render("join", { pageTitle: "Join" });
+export const getJoin = (req, res) => res.render('join', { pageTitle: 'Join' });
 
 export const postJoin = async (req, res) => {
-  console.log("uploadComment is running");
   const { name, username, email, password, password2, location } = req.body;
-  const pageTitle = "Join";
-
-  if (password !== password2) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("join", {
-      pageTitle,
-      errorMessage: "Password confirmation does not match.",
-    });
-  }
-
+  const pageTitle = 'Join';
   const exists = await User.exists({ $or: [{ username }, { email }] });
-
-  if (exists) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("join", {
+  if (password !== password2) {
+    return res.status(400).render('join', {
       pageTitle,
-      errorMessage: "This username/email is already taken.",
+      errorMessage: 'Password confirmation does not match.',
     });
   }
-
+  if (exists) {
+    return res.status(400).render('join', {
+      pageTitle,
+      errorMessage: 'This username/email is already taken.',
+    });
+  }
   try {
     await User.create({
       name,
@@ -35,66 +27,54 @@ export const postJoin = async (req, res) => {
       password,
       location,
     });
-
-    console.log("uploadComment: fail video not found");
-    return res.redirect("/login");
+    return res.redirect('/login');
   } catch (error) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("join", {
-      pageTitle: "Upload Video",
-      errorMessage: error._message,
+    return res.status(400).render('join', {
+      pageTitle,
+      errorMessage: error.message,
     });
   }
 };
 
 export const getLogin = (req, res) =>
-  res.render("login", { pageTitle: "Login" });
+  res.render('login', { pageTitle: 'Login' });
 
 export const postLogin = async (req, res) => {
   const { username, password } = req.body;
-  const pageTitle = "Login";
-
+  const pageTitle = 'Login';
   const user = await User.findOne({ username, socialOnly: false });
-
   if (!user) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("login", {
+    return res.status(400).render('login', {
       pageTitle,
-      errorMessage: "An account with this username does not exist.",
+      errorMessage: 'An account with username does not exists.',
     });
   }
-
   const ok = await bcrypt.compare(password, user.password);
-
   if (!ok) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("login", {
+    return res.status(400).render('login', {
       pageTitle,
-      errorMessage: "Wrong password",
+      errorMessage: 'Wrong password.',
     });
   }
-
   req.session.loggedIn = true;
   req.session.user = user;
-  console.log("uploadComment: fail video not found");
-  return res.redirect("/");
+  return res.redirect('/');
 };
 
 export const startGithubLogin = (req, res) => {
-  const baseUrl = "https://github.com/login/oauth/authorize";
+  const baseUrl = 'https://github.com/login/oauth/authorize';
   const config = {
     client_id: process.env.GH_CLIENT,
     allow_signup: false,
-    scope: "read:user user:email",
+    scope: 'read:user user:email',
   };
   const params = new URLSearchParams(config).toString();
   const finalUrl = `${baseUrl}?${params}`;
-  console.log("uploadComment: fail video not found");
   return res.redirect(finalUrl);
 };
 
 export const finishGithubLogin = async (req, res) => {
-  const baseUrl = "https://github.com/login/oauth/access_token";
+  const baseUrl = 'https://github.com/login/oauth/access_token';
   const config = {
     client_id: process.env.GH_CLIENT,
     client_secret: process.env.GH_SECRET,
@@ -102,20 +82,17 @@ export const finishGithubLogin = async (req, res) => {
   };
   const params = new URLSearchParams(config).toString();
   const finalUrl = `${baseUrl}?${params}`;
-
   const tokenRequest = await (
     await fetch(finalUrl, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
+        Accept: 'application/json',
       },
     })
   ).json();
-
-  if ("access_token" in tokenRequest) {
+  if ('access_token' in tokenRequest) {
     const { access_token } = tokenRequest;
-    const apiUrl = "https://api.github.com";
-
+    const apiUrl = 'https://api.github.com';
     const userData = await (
       await fetch(`${apiUrl}/user`, {
         headers: {
@@ -123,7 +100,6 @@ export const finishGithubLogin = async (req, res) => {
         },
       })
     ).json();
-
     const emailData = await (
       await fetch(`${apiUrl}/user/emails`, {
         headers: {
@@ -131,54 +107,48 @@ export const finishGithubLogin = async (req, res) => {
         },
       })
     ).json();
-
     const emailObj = emailData.find(
-      (email) => email.primary === true && email.verified === true
+      (email) => email.primary === true && email.verified === true,
     );
-
     if (!emailObj) {
       // set notification
-      console.log("uploadComment: fail video not found");
-      return res.redirect("/login");
+      return res.redirect('/login');
     }
-
     let user = await User.findOne({ email: emailObj.email });
-
     if (!user) {
       user = await User.create({
         avatarUrl: userData.avatar_url,
         name: userData.name,
         username: userData.login,
         email: emailObj.email,
-        password: "",
+        password: '',
         socialOnly: true,
         location: userData.location,
       });
     }
-
     req.session.loggedIn = true;
     req.session.user = user;
-    console.log("uploadComment: fail video not found");
-    return res.redirect("/");
-  } else {
-    console.log("uploadComment: fail video not found");
-    return res.redirect("/login");
+    await req.session.save(); // issue #4724
+    return res.redirect('/');
   }
+  return res.redirect('/login');
 };
 
 export const logout = (req, res) => {
-  req.session.destroy(() => {
-    // 세션 제거 후 홈 화면으로 리다이렉트
-    res.redirect("/");
+  req.flash('info', 'Bye Bye');
+  req.session.destroy((err) => {
+    if (err) {
+      // handle error
+    }
+    return res.redirect('/');
   });
 };
 
-export const getEdit = (req, res) => {
-  console.log("uploadComment: fail video not found");
-  return res.render("edit-profile", { pageTitle: "Edit Profile" });
-};
+export const getEdit = (req, res) =>
+  res.render('edit-profile', { pageTitle: 'Edit Profile' });
 
 export const postEdit = async (req, res) => {
+  const pageTitle = 'Edit Profile';
   const {
     session: {
       user: { _id, avatarUrl },
@@ -187,34 +157,44 @@ export const postEdit = async (req, res) => {
     file,
   } = req;
 
-  const isHeroku = process.env.NODE_ENV === "production";
+  const currentUser = req.session.user;
 
-  const updatedUser = await User.findByIdAndUpdate(
+  if (currentUser.email !== email && (await User.exists({ email }))) {
+    return res.status(400).render('edit-profile', {
+      pageTitle,
+      errorMessage: 'This email is already taken.',
+    });
+  }
+
+  if (currentUser.username !== username && (await User.exists({ username }))) {
+    return res.status(400).render('edit-profile', {
+      pageTitle,
+      errorMessage: 'This username is already taken.',
+    });
+  }
+
+  const updateUser = await User.findByIdAndUpdate(
     _id,
     {
-      avatarUrl: file ? (isHeroku ? file.location : file.path) : avatarUrl,
+      avatarUrl: file ? req.filePath(file) : avatarUrl,
       name,
       email,
       username,
       location,
     },
-    { new: true }
+    { new: true },
   );
 
-  req.session.user = updatedUser;
-  console.log("uploadComment: fail video not found");
-  return res.redirect("/users/edit");
+  req.session.user = updateUser;
+  return res.redirect('/users/edit');
 };
 
 export const getChangePassword = (req, res) => {
   if (req.session.user.socialOnly === true) {
-    req.flash("error", "Can't change password.");
-    console.log("uploadComment: fail video not found");
-    return res.redirect("/");
+    req.flash('error', "Can't change password.");
+    return res.redirect('/');
   }
-
-  console.log("uploadComment: fail video not found");
-  return res.render("users/change-password", { pageTitle: "Change Password" });
+  return res.render('users/change-password', { pageTitle: 'Change Password' });
 };
 
 export const postChangePassword = async (req, res) => {
@@ -224,51 +204,49 @@ export const postChangePassword = async (req, res) => {
     },
     body: { oldPassword, newPassword, newPasswordConfirmation },
   } = req;
-
   const user = await User.findById(_id);
+
+  // Output an error message if `oldPassword` is incorrect.
   const ok = await bcrypt.compare(oldPassword, user.password);
-
   if (!ok) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("users/change-password", {
-      pageTitle: "Change Password",
-      errorMessage: "The current password is incorrect",
+    return res.status(400).render('users/change-password', {
+      pageTitle: 'Change Password',
+      errorMessage: 'The current password is incorrect.',
     });
   }
 
+  // Output an error message if `newPassword` and `newPasswordConfirmation` are
+  // different.
   if (newPassword !== newPasswordConfirmation) {
-    console.log("uploadComment: fail video not found");
-    return res.status(400).render("users/change-password", {
-      pageTitle: "Change Password",
-      errorMessage: "The password does not match the confirmation",
+    return res.status(400).render('users/change-password', {
+      pageTitle: 'Change Password',
+      errorMessage: 'The password does not match the confirmation.',
     });
   }
 
+  // Update the user's password.
   user.password = newPassword;
   await user.save();
-
-  req.flash("info", "Password updated");
-  console.log("uploadComment: fail video not found");
-  return res.redirect("/users/logout");
+  req.flash('info', 'Password updated');
+  return res.redirect('/users/logout');
 };
 
 export const see = async (req, res) => {
+  // To make it public, we get the id from `req.params`.
   const { id } = req.params;
+
   const user = await User.findById(id).populate({
-    path: "videos",
+    path: 'videos',
     populate: {
-      path: "owner",
-      model: "User",
+      path: 'owner',
+      model: 'User',
     },
   });
-
   if (!user) {
-    console.log("uploadComment: fail video not found");
-    return res.status(404).render("404", { pageTitle: "User not found." });
+    return res.status(404).render('404', { pageTitle: 'User not found.' });
   }
 
-  console.log("uploadComment: successfully operated");
-  return res.render("users/profile", {
+  return res.render('users/profile', {
     pageTitle: user.name,
     user,
   });
