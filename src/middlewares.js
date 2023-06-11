@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 export const localsMiddleware = (req, res, next) => {
   res.locals.loggedIn = Boolean(req.session.loggedIn);
-  res.locals.siteNmae = "spongetube";
+  res.locals.siteNmae = "wetube";
   res.locals.loggedInUser = req.session.user || {};
   res.locals.isProduction = isProduction;
   next();

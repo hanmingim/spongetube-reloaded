@@ -4,6 +4,9 @@ mongoose.connect(process.env.DB_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   dbName: process.env.DB_NAME,
+  // From mongoose 6.x, it is no longer necessary.
+  // useFindAndModify: false,
+  // useCreateIndex: true,
 });
 
 const db = mongoose.connection;

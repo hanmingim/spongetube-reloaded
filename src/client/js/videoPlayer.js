@@ -121,7 +121,7 @@
   fullScreenBtn.addEventListener('click', handleFullscreen);
   video.addEventListener('click', handlePlayClick);
 
-
+  // Add tabindex and aria-label attributes for better accessibility
   playBtn.setAttribute('tabindex', 0);
   muteBtn.setAttribute('tabindex', 0);
   fullScreenBtn.setAttribute('tabindex', 0);
@@ -134,20 +134,20 @@
   timeline.setAttribute('aria-label', 'Timeline');
   volumeRange.setAttribute('aria-label', 'Volume');
 
-
+  // press spacebar to play or pause
   document.body.onkeyup = (e) => {
     if (e.key === ' ' || e.code === 'Space') {
-      e.preventDefault();
+      e.preventDefault(); // prevent scrolling on spacebar press
       handlePlayClick();
     }
   };
 
-
+  // Add error handling
   video.addEventListener('error', (event) => {
     console.error('An error occurred while playing the video: ', event);
   });
 
-
+  // Feature detection for fullscreen
   if (!document.fullscreenEnabled) {
     console.warn('Fullscreen is not supported in this browser.');
     fullScreenBtn.style.display = 'none';
