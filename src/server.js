@@ -18,12 +18,12 @@ app.use(logger);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(
-    session({
-        secret: process.env.COOKIE_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: MongoStore.create({ mongoUrl: process.env.DB_URL }),
-    })
+  session({
+    secret: process.env.COOKIE_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.DB_URL }),
+  })
 );
 app.use(flash());
 app.use(localsMiddleware);
@@ -34,4 +34,4 @@ app.use("/videos", videoRouter);
 app.use("/users", userRouter);
 app.use("/api", apiRouter);
 
-export default app;
+export default app;//Tester
