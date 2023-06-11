@@ -1,8 +1,13 @@
 mixin video(video)
-   a(href=`/videos/${video.id}`).video-mixin
-        div.video-mixin__thumb(style=`background-image:url(${video.thumbUrl});background-size:cover;background-position:center;`)
-        div.video-mixin__data
-            span.video-mixin__title=video.title
-            div.video-mixin__meta
-                span #{video.owner ? video.owner.name : 'Unknown'} •
-                span #{video.meta.views} 회
+  - let imageUrl = isProduction ? video.thumbUrl : '/' + video.thumbUrl;
+
+  a.video-mixin(href=`/videos/${video.id}`)
+    img.video-mixin__thumb(
+      style=`background-image:url(${imageUrl});background-size:cover;background-position:center;`,
+      crossorigin='anonymous'
+    )
+    .video-mixin__data
+      span.video-mixin__title= video.title
+      .video-mixin__meta
+        span #{ video.owner.name } •
+        span #{ video.meta.views } 회
