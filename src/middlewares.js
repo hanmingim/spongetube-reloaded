@@ -28,6 +28,7 @@ export const localsMiddleware = (req, res, next) => {
   res.locals.siteTitle = "Home";
   next();
 };
+
 export const protectorMiddleware = (req, res, next) => {
   if (req.session.loggedIn && req.session.user) {
     return next();
@@ -36,6 +37,7 @@ export const protectorMiddleware = (req, res, next) => {
     return res.redirect("/login");
   }
 };
+
 export const publicOnlyMiddleware = (req, res, next) => {
   if (!req.session.loggedIn) {
     return next();
@@ -46,14 +48,17 @@ export const publicOnlyMiddleware = (req, res, next) => {
 };
 
 export const avatarUpload = multer({
-  dest: "uploads/avatars", limits: {
+  dest: "uploads/avatars",
+  limits: {
     filesize: 3000000,
   },
-  storage: isHeroku ? s3ImageUploader : undefined,
+  storage: s3ImageUploader,
 });
-export const videoUpload = multer({//Testing
-  dest: "uploads/videos", limits: {
+
+export const videoUpload = multer({
+  dest: "uploads/videos",
+  limits: {
     filesize: 10000000,
   },
-  storage: isHeroku ? s3VideoUploader : undefined,
+  storage: s3VideoUploader,
 });
